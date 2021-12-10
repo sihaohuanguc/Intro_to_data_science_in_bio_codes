@@ -1,0 +1,146 @@
+---
+title: "Lecture10"
+author: "Me"
+date: "3/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# chapter 28
+```{r}
+p<-ggplot(mpg,aes(displ,hwy))+
+  geom_point(aes(color=class))+
+  geom_smooth(se=FALSE)
+p
+```
+```{r}
+p+labs(
+  x="Engine displacement (L)",
+  y="Highway fuel economy (mph)",
+  color="Car type"
+)
+```
+```{r}
+p+labs(
+  x=expression("Concentration of "~C1[2]~(mu*mol~g^{-1}~"dry wt")),
+  y="Highway fuel economy (mph)",
+  color="Car type"
+)
+```
+```{r}
+p+geom_hline(yintercept=25,size=2,color="white")
+```
+```{r}
+annot<-tibble(
+  displ=4.25,
+  hwy=27,
+  label="Look at me!"
+)
+p+geom_label(data=annot,aes(label=label),vjust="bottom",hjust="left")+
+  geom_point(data=annot,size=4)
+```
+```{r}
+p+scale_y_continuous(breaks=seq(15,40,by=2))
+```
+```{r}
+p+scale_y_log10()
+```
+```{r}
+p+theme(legend.position = "none")
+```
+```{r}
+p+theme(legend.position = "top")
+```
+```{r}
+p+theme(legend.position = "top")+
+  scale_color_brewer(palette="Set1")
+```
+```{r}
+p+xlim(3,5)
+```
+```{r}
+p+coord_cartesian((xlim=c(3,5)))
+```
+```{r}
+p+theme_classic()
+```
+```{r}
+p+theme_dark()
+```
+```{r}
+p+theme_void()
+```
+```{r}
+ggsave("my_plot.png",p)
+```
+
+# mutiple panels
+```{r}
+library(cowplot)
+```
+
+```{r}
+p+theme_cowplot(24,font_family = "Helvetica")
+```
+```{r}
+p1<-ggplot(mpg,aes(displ,hwy))+geom_point()
+p2<-ggplot(mpg,aes(displ,cty))+geom_point()
+plot_grid(p1,p2,labels=c("A","B"),label_size = 12)
+```
+```{r}
+p1<-ggplot(mpg,aes(displ,hwy))+geom_point()
+p2<-ggplot(mpg,aes(displ,cty))+geom_point()
+logo_file<-system.file("extdata","log.png",package = "cowplot")
+lplot<-ggdraw()+draw_image(logo_file)   # can't install package "migick"
+pout<-plot_grid(p1,p2,p1,lplot,labels="AUTO",label_size = 12)
+pout
+```
+```{r}
+save_plot("cow2x2.png",pout,base_width = 3.42)
+# if save as "svg" files then it's vectors in the figure instead of pixels.
+```
+
+```{r}
+p1<-ggplot(mtcars,aes(disp,mpg))+geom_point()+
+  theme(axis.text.x = element_text(size=14,angle=90,vjust=0.5))
+p2<-ggplot(mtcars,aes(qsec,mpg))+geom_point()
+p3<-ggplot(mtcars,aes(qsec,disp))+geom_point()+facet_wrap(~gear)
+pbottom<-plot_grid(p1,p2,labels=c("B","C"),label_size = 12,align = "h",
+                rel_widths = c(2,1))
+plot_grid(p3,pbottom,ncol=1,labels=c("A",""),label_size = 12)
+```
+```{r}
+dsamp<-diamonds[sample(nrow(diamonds),1000),]
+plot_diamonds<-function(x_aes){
+  x_aes<-enquo(x_aes)
+  ggplot(dsamp,aes(!!x_aes,price,color=clarity))+
+    geom_point()+
+    theme_half_open(12)
+}
+p1<-plot_diamonds(carat)
+p2<-plot_diamonds(depth)+ylab(NULL)
+p3<-plot_diamonds(color)+ylab(NULL)
+legend<-get_legend(p1)
+
+prow<-plot_grid(
+  p1+theme(legend.position = "none"),
+  p2+theme(legend.position = "none"),
+  p3+theme(legend.position = "none"),
+  align="vh",
+  labels="AUTO",
+  nrow=1
+)
+
+plot_grid(prow,legend,rel_widths=c(3,0.4))
+```
+
+
+
+
+
+
+

@@ -1,0 +1,103 @@
+---
+title: "Lec8"
+author: "Me"
+date: "3/3/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(boot)
+library(broom)
+library(rsample)
+```
+
+# Lecture 8 Bootstrapping
+```{r}
+my_diamonds<-diamonds%>%
+  filter(!is.na(x),!is.na(y))
+ggplot(my_diamonds,aes(x=x/y))+
+  geom_histogram(binwidth = 0.0005)+
+  coord_cartesian(xlim=c(0.95,1.05))+
+  labs(title="Diamond aspect ratio")
+```
+```{r}
+mean_ratio<-function(data,indices){
+  sample<-data[indices,]
+  sum(sample$x)/sum(sample$y)
+}
+
+boot(my_diamonds,mean_ratio,R=1000)
+```
+```{r}
+mean_ratio<-function(data,indices){
+  sample<-data[indices,]
+  sum(sample$x)/sum(sample$y)
+}
+
+boot(my_diamonds,mean_ratio,R=10) # the number in a sample should not be too small
+```
+```{r}
+p<-ggplot(mtcars,aes(wt,mpg))+
+  geom_point()
+p
+```
+```{r}
+nlsfit<-nls(mpg~k/wt+b,mtcars,start=c(k=1,b=0))
+summary(nlsfit)
+p+geom_line(aes(y=predict(nlsfit)))
+```
+```{r}
+#set.seet(27)
+boots<-bootstraps(mtcars,times=100)
+boots
+```
+```{r}
+fit_nls_on_bootstrap<-function(split){
+  nls(mpg~k/wt+b,analysis(split),start=c(k=1,b=0))
+}
+boot_models<-boots%>%
+  mutate(model=map(splits,fit_nls_on_bootstrap),
+         coef_info=map(model,tidy))
+boot_coefs<-boot_models%>%unnest(coef_info)
+
+```
+
+
+```{r}
+alphaa<-0.05
+boot_coefs%>%
+  group_by(term)%>%
+  summarise(low=quantile(estimate,alpha/2),
+            high=quantile(estimate,1-alpha/2))
+rlang::last_error()
+```
+```{r}
+ggplot(boot_coefs,aes(estimate))+
+  geom_histogram(binwidth = 2)+
+  facet_wrap(~term,scales = "free")
+```
+```{r}
+boot_aug<-boot_models%>%
+  mutate(augmented=map(model,augment))%>%
+  unnest(augmented)
+boot_aug
+```
+```{r}
+ggplot(boot_aug,aes(wt,mpg))+
+  geom_point()+
+  geom_line(aes(y=.fitted,group=id),alpha=0.1)
+```
+
+
+
+
+
+
+
+
+
+
+
+

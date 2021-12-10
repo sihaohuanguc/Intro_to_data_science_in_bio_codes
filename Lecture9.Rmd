@@ -1,0 +1,139 @@
+---
+title: "Lec9"
+author: "Me"
+date: "3/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# assumptions
+- Independence
+- Normal/Gaussian distribution of residuals
+- Constant variance of residuals -- homoskedasticity
+
+```{r}
+View(PlantGrowth)
+```
+
+# t-test
+comparing two groups at a time
+
+```{r}
+ggplot(PlantGrowth,aes(group,weight))+
+  geom_boxplot()
+```
+```{r}
+ctrls<-PlantGrowth%>%filter(group=="ctrl")
+qqnorm(ctrls$weight)
+qqline(ctrls$weight) # check whether the quantiles look like a normal distribution
+```
+```{r}
+result<-t.test(ctrls$weight,mu=0) # althouth mean of this dataset doesn't look like 0
+result
+```
+```{r}
+trt1<-PlantGrowth%>%filter(group=="trt1")
+result<-t.test(ctrls$weight,trt1$weight)  # p value 0.25, you can't reject the hypothesis that they have same mean
+result
+```
+
+What if it's not Gaussian distribution?
+What if exponantial distributions?
+# nonparametric variant: Wilcoxon test
+```{r}
+result<-wilcox.test(ctrls$weight,mu=0) # so we kown that mean is not 0, but p value is larger this time
+result
+```
+```{r}
+trt1<-PlantGrowth%>%filter(group=="trt1")
+result<-wilcox.test(ctrls$weight,trt1$weight) 
+result
+```
+```{r}
+knitr::include_graphics("significant.png")
+```
+
+# ANOVAs
+```{r}
+View(iris)
+```
+
+```{r}
+ggplot(iris,aes(Species,Sepal.Length))+geom_boxplot(notch = TRUE)
+```
+```{r}
+result<-aov(Sepal.Length~Species,iris)
+plot(result)
+```
+```{r}
+summary(result)
+```
+
+# post hoc test
+Tukey's test, Tukey's Honest Significant Difference test
+```{r}
+TukeyHSD(result) # the results show that the three groups are totaly different
+```
+
+# bad data
+```{r}
+result<-aov(breaks~tension,warpbreaks)
+plot(result)
+```
+```{r}
+my_warpbreaks<-warpbreaks%>%mutate(log_breaks=log(breaks))
+result<-aov(log_breaks~tension,my_warpbreaks)
+plot(result)
+```
+```{r}
+summary(result)
+```
+
+# nonparametric 
+```{r}
+result<-kruskal.test(breaks~tension,warpbreaks)
+result
+```
+
+#Linear mixture model
+```{r}
+library(lme4)
+```
+
+```{r}
+str(sleepstudy)
+```
+
+```{r}
+ggplot(sleepstudy,aes(Days,Reaction))+
+  geom_point()+
+  geom_smooth(method="lm")+
+  facet_wrap(~Subject)
+```
+```{r}
+fm1<-lmer(Reaction~Days+(Days|Subject),sleepstudy,REML=FALSE)
+plot(fm1)
+```
+```{r}
+summary(fm1)
+```
+```{r}
+fm0<-lmer(Reaction~(Days|Subject),sleepstudy,REML=FALSE)
+summary(fm0)
+```
+
+```{r}
+anova(fm1,fm0)
+```
+
+
+
+
+
+
+
+

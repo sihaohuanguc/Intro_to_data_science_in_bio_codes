@@ -1,0 +1,160 @@
+---
+title: "Lecture2"
+author: "Me"
+date: "2/4/2021"
+output: html_document
+---
+
+# heading
+## subheading
+### subsubheading
+
+# the first chunk in the file
+```{r setup, include=FALSE}   
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## R Markdown
+**Markdown** is very useful!!! When you write `README.md` files for codes in github repositories, you also need Markdown. It's not limited to R programming!
+
+double hash = heading
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r cars}
+summary(cars)
+```
+
+### shortcut keys(very useful!!!)
+add a new code chunk: command+option+i
+
+run current chunk: shift+command+enter
+
+## Including Plots
+You can also embed plots, for example:
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R codes that generated the plot.
+"pressure" is the title of the chunk
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+The codes will be run and the out put will be shown together with the code blocks
+```{r}
+print("a")
+```
+```{r}
+ggplot(data=mpg)+
+  geom_point(mapping = aes(x=displ,y=hwy))+
+  facet_wrap(~class,nrow=2)
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_point(mapping = aes(x=displ,y=hwy))+
+  facet_grid(drv~cyl) # show all combinations of two variables
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_point(mapping = aes(x=displ,y=hwy))+
+  facet_grid(.~cyl) #fomular
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_point(mapping = aes(x=displ,y=hwy))+
+  facet_grid(drv~cyl) # show all combinations of two variables
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_point(mapping = aes(x=displ,y=hwy)) 
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_smooth(mapping = aes(x=displ,y=hwy)) 
+```
+
+use "Help" on the right to check all parameters of geom_smooth
+```{r}
+ggplot(data=mpg)+
+  geom_smooth(mapping = aes(x=displ,y=hwy),method="lm") 
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_smooth(mapping = aes(x=displ,y=hwy,linetype=drv)) 
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_point(mapping = aes(x=displ,y=hwy,color=drv))+
+  geom_smooth(mapping = aes(x=displ,y=hwy,linetype=drv,color=drv)) 
+```
+
+```{r}
+ggplot(data=mpg,mapping = aes(x=displ,y=hwy,color=drv))+
+  geom_point()+
+  geom_smooth(mapping = aes(linetype=drv)) 
+```
+
+```{r}
+ggplot(data=mpg,mapping = aes(x=displ,y=hwy,color=drv,linetype=drv))+
+  geom_point()+
+  geom_smooth() 
+```
+
+```{r}
+ggplot(data=mpg,mapping = aes(x=displ,y=hwy,linetype=drv))+
+  geom_point(mapping = aes(color=class))+
+  geom_smooth() 
+```
+
+```{r}
+ggplot(data=mpg,mapping = aes(x=displ,y=hwy))+
+  geom_point(mapping = aes(color=class))+
+  geom_smooth(data=filter(mpg,class=="subcompact"),se=FALSE)  # se is the error bar
+```
+
+# Bar charts and statistical transformations
+```{r}
+summary(diamonds)
+ggplot(data=diamonds)+
+  geom_bar(mapping=aes(x=cut))
+```
+```{r}
+demo<-tribble(
+  ~cut,~freq,
+  "Fair",1610,
+  "Good",4906,
+  "Very Good",12082,
+  "Premium",13791,
+  "Ideal",21551
+)
+ggplot(data=demo)+
+  geom_bar(mapping=aes(x=cut,y=freq),stat="identity")
+```
+```{r}
+ggplot(data=diamonds)+
+  geom_bar(mapping=aes(x=cut,fill=clarity))
+```
+
+```{r}
+ggplot(data=diamonds)+
+  geom_bar(mapping=aes(x=cut,fill=clarity),position="fill")
+```
+```{r}
+ggplot(data=diamonds)+
+  geom_bar(mapping=aes(x=cut,fill=clarity),position="dodge")
+```
+```{r}
+ggplot(data=mpg)+
+  geom_point(mapping=aes(x=displ,y=hwy),position="jitter") # will not look like dots are on the grids
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_jitter(mapping=aes(x=displ,y=hwy)) # will not look like dots are on the grids
+```
+
