@@ -1,0 +1,93 @@
+---
+title: "Session_1_coding_session"
+author: "Me"
+date: "1/13/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+```
+
+
+```{r}
+ggplot(data = mpg) # empty plot, no aesthetics
+```
+
+```{r} 
+# dimension
+?mpg
+dim(mpg)
+mpg
+a<-mpg
+```
+
+```{r}
+ggplot(data = mpg)+
+  geom_point(aes(x=cyl,y=hwy))
+```
+
+
+```{r}
+ggplot(data = mpg)+
+  geom_point(aes(x=class,y=drv),alpha=0.1)  # the points are piling up over each other
+```
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy), color = "blue", size=10, shape="triangle")
+```
+
+```{r}
+# What’s gone wrong with this code? Why are the points not blue?
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = "blue")) # parenthesis position
+```
+
+
+```{r}
+mpg
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = displ))
+```
+
+
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy,color = displ<5) ) #True and False
+```
+
+
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy), color = "blue", size=10, shape="triangle")
+```
+
+
+
+```{r}
+?geom_point
+```
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy), color = "blue", size=10, shape=21,stroke=5) # stroke only works with shapes 21 to 24
+```
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy,color = displ<5 & hwy<20) ) #True and False
+```
+
+
+
+
+
