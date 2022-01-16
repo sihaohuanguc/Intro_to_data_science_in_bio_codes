@@ -1,0 +1,174 @@
+---
+title: "Lecture2"
+author: "Me"
+date: "01/16/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# heading
+## subheading
+### subsubheading
+
+# the first chunk in the file
+```{r setup, include=FALSE}   
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## R Markdown
+**Markdown** is very useful!!! When you write `README.md` files for codes in github repositories, you also need Markdown. It's not limited to R programming!
+
+double hash = heading
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r cars}
+summary(cars)
+```
+
+### shortcut keys(very useful!!!)
+add a new code chunk: command+option+i
+
+run current chunk: shift+command+enter
+
+comment a line: command+shift+c
+
+## Including Plots
+You can also embed plots, for example:
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R codes that generated the plot.
+"pressure" is the title of the chunk
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+The codes will be run and the out put will be shown together with the code blocks
+```{r}
+print("a")
+```
+## start about facet
+```{r}
+# draw each panel depending on its class.
+ggplot(data=mpg)+
+  geom_point(mapping = aes(x=displ,y=hwy))+
+  facet_wrap(~class,nrow=2)  # draw all panels in two rows
+
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_point(mapping = aes(x=displ,y=hwy))+
+  facet_grid(drv~cyl) # show all combinations of the two variables
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_point(mapping = aes(x=displ,y=hwy))+
+  facet_grid(.~cyl) #fomular  # if you put a "." then you could draw panels with only one variable
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_point(mapping = aes(x=displ,y=hwy))+
+  facet_grid(drv~cyl) # show all combinations of two variables
+```
+
+# more geometries
+```{r}
+ggplot(data=mpg)+
+  geom_point(mapping = aes(x=displ,y=hwy)) 
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_smooth(mapping = aes(x=displ,y=hwy))   # the default method is "Loess"
+```
+
+use "Help" on the right to check all parameters of geom_smooth
+```{r}
+ggplot(data=mpg)+
+  geom_smooth(mapping = aes(x=displ,y=hwy),method="lm")  # if you want a straight line instead of a curve
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_smooth(mapping = aes(x=displ,y=hwy,linetype=drv))  # now the data are broken into 3 categories based on the type of "drv"
+```
+
+```{r}
+# multiple layers
+ggplot(data=mpg)+
+  geom_point(mapping = aes(x=displ,y=hwy,color=drv))+
+  geom_smooth(mapping = aes(x=displ,y=hwy,linetype=drv,color=drv)) 
+```
+
+```{r}
+# some part appear twice in the codes and they are the same, so we could put them in the first () and you don't need to type them twice
+ggplot(data=mpg,mapping = aes(x=displ,y=hwy,color=drv))+ # mapping here applies for everything below
+  geom_point()+
+  geom_smooth(mapping = aes(linetype=drv)) 
+```
+
+```{r}
+ggplot(data=mpg,mapping = aes(x=displ,y=hwy,color=drv,linetype=drv))+
+  geom_point()+
+  geom_smooth() 
+```
+
+```{r}
+ggplot(data=mpg,mapping = aes(x=displ,y=hwy,linetype=drv))+
+  geom_point(mapping = aes(color=class))+
+  geom_smooth() 
+```
+
+```{r}
+# filter the data and draw fitting curve for only one class
+ggplot(data=mpg,mapping = aes(x=displ,y=hwy))+
+  geom_point(mapping = aes(color=class))+
+  geom_smooth(data=filter(mpg,class=="subcompact"),se=FALSE)  # se is the error bar
+```
+
+# Bar charts and statistical transformations
+```{r}
+summary(diamonds)
+ggplot(data=diamonds)+
+  geom_bar(mapping=aes(x=cut))
+```
+
+```{r}
+demo<-tribble(
+  ~cut,~freq,
+  "Fair",1610,
+  "Good",4906,
+  "Very Good",12082,
+  "Premium",13791,
+  "Ideal",21551
+)
+ggplot(data=demo)+
+  geom_bar(mapping=aes(x=cut,y=freq),stat="identity") # when stat is "count", then it will count the frequency of data in each group. If it's "identity". it will plot the value of y directly but not count the freq
+```
+```{r}
+ggplot(data=diamonds)+
+  geom_bar(mapping=aes(x=cut,fill=clarity)) # show the parts of the bar according to "clarity"
+```
+
+```{r}
+ggplot(data=diamonds)+
+  geom_bar(mapping=aes(x=cut,fill=clarity),position="fill") # position is how the bars are arranged
+```
+
+```{r}
+ggplot(data=diamonds)+
+  geom_bar(mapping=aes(x=cut,fill=clarity),position="dodge") # dodge means bars avoiding overlapping with each other
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_point(mapping=aes(x=displ,y=hwy),position="jitter") # will not look like dots are on the grids # add a fluctuation to x and y
+```
+
+```{r}
+ggplot(data=mpg)+
+  geom_jitter(mapping=aes(x=displ,y=hwy)) # will not look like dots are on the grids
+```
+
