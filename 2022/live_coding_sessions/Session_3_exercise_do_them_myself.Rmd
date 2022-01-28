@@ -1,0 +1,216 @@
+---
+title: "Session_3_exercise_do_them_myself"
+author: "Me"
+date: "1/26/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(nycflights13)
+```
+
+# chapter 8, chapter 5 (before 5.6)
+
+5.2.4 Exercises
+Find all flights that
+
+Had an arrival delay of two or more hours
+
+```{r}
+filter(flights,arr_delay>120)
+```
+
+Flew to Houston (IAH or HOU)    Airport three letter code, FAA airport code.
+```{r}
+filter(flights,dest=="IAH"| dest=="HOU")
+filter(flights,dest %in% c("IAH","HOU"))
+```
+
+Were operated by United, American, or Delta     Two letter abbreviation.
+```{r}
+filter(flights,carrier %in% c("UA","AA","DL"))
+```
+Departed in summer (July, August, and September)
+```{r}
+filter(flights,6<month & month<10)  # look at the dep_time, why the first one is "1"? it is 0:01 am.
+filter(flights,between(month,7,9)) 
+```
+
+Arrived more than two hours late, but didn’t leave late
+
+```{r}
+filter(flights,arr_delay>120 & dep_delay<=0)
+filter(flights,dep_delay<=0) # flights that didn't leave late
+```
+
+Were delayed by at least an hour, but made up over 30 minutes in flight
+```{r}
+filter(flights,dep_delay>60 & dep_delay-arr_delay>30)  # save more than 30 min during the flight
+```
+
+Departed between midnight and 6am (inclusive)
+Another useful dplyr filtering helper is between(). What does it do? Can you use it to simplify the code needed to answer the previous challenges?
+
+```{r}
+filter(flights,between(dep_time,0,600))  # Are the borders included in the results
+# or is it >0 or >=0? could check the "month" for an answer
+```
+
+
+How many flights have a missing dep_time? What other variables are missing? What might these rows represent?
+
+```{r}
+filter(flights,is.na(dep_time)) 
+#  dep_time, dep_delay, arr_time, arr_delay, air_time. The f;ights were cancelled.
+# is there any flight that has a dep_time but doesn't have a arr_time?
+filter(flights,is.na(arr_time) & ! is.na(dep_time)) 
+# Don't worry. No air crash in all flights that departed NYC (i.e. JFK, LGA or EWR) in 2013.
+# Due to some reasons like weather, these flights didn't land at their original destinations.
+```
+
+
+
+Why is NA ^ 0 not missing? Why is NA | TRUE not missing? Why is FALSE & NA not missing? Can you figure out the general rule? (NA * 0 is a tricky counterexample!)
+
+```{r}
+NA^0 # NA to the 0th power
+NA|TRUE # anything else OR TRUE is always TRUE
+NA & FALSE # anything else AND FALSE is always FALSE
+NA * 0
+Inf * 0  # infinite
+# NaN (“Not a Number”) means 0/0
+# NA (“Not Available”) is generally interpreted as a missing value
+```
+
+
+
+
+5.3.1 Exercises
+How could you use arrange() to sort all missing values to the start? (Hint: use is.na()).
+
+```{r}
+# need to specific a variable, like dep_delay
+# put all rows with a missing value for dep_delay at the start of the table
+head(arrange(flights, desc(is.na(dep_delay))))
+arrange(flights, desc(is.na(dep_delay)))
+
+```
+
+Sort flights to find the most delayed flights. Find the flights that left earliest.
+```{r}
+arrange(flights,desc(dep_delay))
+arrange(flights,desc(arr_delay-dep_delay))  # the flights that delay the most during the flight
+arrange(flights,desc(arr_delay),dep_time)
+```
+
+Sort flights to find the fastest (highest speed) flights.
+```{r}
+arrange(flights,desc(distance/air_time))
+```
+
+Which flights travelled the farthest? Which travelled the shortest?
+```{r}
+arrange(flights,desc(distance)) # to Honolulu
+arrange(flights,distance) # the flight is from Newark to LaGuardia... # PHL Philadelphia
+```
+
+
+5.4.1 Exercises
+Brainstorm as many ways as possible to select dep_time, dep_delay, arr_time, and arr_delay from flights.
+
+```{r}
+select(flights,dep_time, dep_delay, arr_time, arr_delay)
+select(flights, starts_with('dep'), starts_with('arr'))
+```
+
+
+What happens if you include the name of a variable multiple times in a select() call?
+
+```{r}
+select(flights,dep_time,dep_time)  # only select once
+```
+
+What does the any_of() function do? Why might it be helpful in conjunction with this vector?
+vars <- c("year", "month", "day", "dep_delay", "arr_delay")Copy
+```{r}
+vars <- c("year", "month", "day", "dep_delay", "arr_delay")
+select(flights,any_of(vars))  # it select the variables in "vars"
+select(flights,vars)
+```
+
+
+Does the result of running the following code surprise you? How do the select helpers deal with case by default? How can you change that default?
+select(flights, contains("TIME"))Copy
+```{r}
+select(flights, contains("TIME")) # The original code intends to select variables containing the characters TIME. However, the selected variables contain the lower case time instead. By default, contains() is not case sensitive.
+select(flights,contains("TIME",ignore.case = FALSE)) # now the lower case time is not considered
+```
+
+
+5.5.2 Exercises
+Currently dep_time and sched_dep_time are convenient to look at, but hard to compute with because they’re not really continuous numbers. Convert them to a more convenient representation of number of minutes since midnight.
+
+```{r}
+flights <- mutate(flights,
+                  dep_time_mins = dep_time %/% 100 * 60 + dep_time %% 100,   # Quotient and remainder
+                  sched_dep_time_mins = sched_dep_time %/% 100 * 60 + sched_dep_time %% 100)
+
+select(flights, starts_with('dep_time'), starts_with('sched'))
+```
+
+
+Compare air_time with arr_time - dep_time. What do you expect to see? What do you see? What do you need to do to fix it?
+
+```{r}
+flights_new<-select(flights,air_time, arr_time, dep_time)
+flights_new<-mutate(flights_new,
+                    flight_time=arr_time - dep_time)
+flights_new   #  the arr_time and dep_time are in the format of hour and minutes
+flights_new<-mutate(flights_new,
+                    real_flight_time=arr_time %/% 100 * 60 +arr_time %% 100 - dep_time%/% 100 * 60 -dep_time %% 100)
+flights_new   # they are still different
+```
+
+
+Compare dep_time, sched_dep_time, and dep_delay. How would you expect those three numbers to be related?
+
+```{r}
+select(flights, dep_time, sched_dep_time, dep_delay) # dep_time and sched_dep_time are in clock format. Their difference in minutes is given by dep_delay.
+```
+
+Find the 10 most delayed flights using a ranking function. How do you want to handle ties? Carefully read the documentation for min_rank().
+
+```{r}
+# not mentioned in the class?
+head(arrange(flights, min_rank(desc(dep_delay))), 10)
+# min_rank() is equivalent to rank() method with the argument ties.method = 'min. It assigns every tied element to the lowest rank.
+```
+
+What does 1:3 + 1:10 return? Why?
+
+```{r}
+1:3 + 1:10 #  the shorter vector with be ‘repeated’ to match the length of the longer vector.
+```
+
+
+What trigonometric functions does R provide?
+
+```{r}
+?sin
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

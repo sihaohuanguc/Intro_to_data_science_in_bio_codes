@@ -1,0 +1,105 @@
+---
+title: 'Lecture 3: Projects, Data Transformation'
+author: "Me"
+date: "1/26/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+```
+
+```{r}
+ggplot(diamonds,aes(carat,price))+
+  geom_hex()
+ggsave("diamonds.pdf")
+write_csv(diamonds,"diamonds.csv")
+```
+
+# dplyr
+
+```{r}
+flights
+?flights
+```
+
+# basic ops
+
+filter()  # select rows by values
+arrange()  # reorder the whole table
+select()  # pick columns by names
+mutate()  # create new columns for a table
+summary()  # collapse to single value
+group_by()  # divide table to groups
+
+```{r}
+filter(flights,month==1,day==1)
+filter(flights,month==1 & day==1)
+
+```
+
+```{r}
+jan1<-filter(flights,month==1 & day==1)
+```
+
+
+```{r}
+filter(flights,month %in% c(6,7,8))  # in!
+```
+
+# NA values
+
+```{r}
+is.na(NA)
+```
+
+# Arrange
+sort the table with some variables
+```{r}
+arrange(flights,year,desc(month),day)  # descending order for month
+```
+
+```{r}
+arrange(flights,desc(dep_delay))  # descending order for month
+```
+# select columns 
+
+```{r}
+select(flights, year, month,day,dep_delay)
+```
+
+```{r}
+select(flights, -year, -month,-day)  # select everything but not dates
+select(flights, -(year:day))  # rule out some columns
+```
+
+# mutate
+generate new columns for a table
+```{r}
+flights_small<-select(flights,
+                      year:day,
+                      ends_with("delay"),  # select all columns  whose cloumn name end with "delay"
+                      distance,
+                      air_time)
+mutate(flights_small,
+       gain=dep_delay-arr_delay,
+       speed=distance/air_time*60,
+       hours=air_time/60,
+       gain_per_hour=gain/hours)
+```
+
+
+
+
+
+
+
+
+
+
+
