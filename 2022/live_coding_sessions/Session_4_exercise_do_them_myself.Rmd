@@ -1,0 +1,252 @@
+---
+title: "Session_4_exercise_do_them_myself"
+author: "Me"
+date: "2/1/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(nycflights13)
+```
+
+# R4DS 5.6, 7.3, 7.7, 10, 11
+```{r}
+flights
+```
+
+5.6.7 Exercises
+Brainstorm at least 5 different ways to assess the typical delay characteristics of a group of flights. Consider the following scenarios:
+
+```{r}
+# how many different flights are there? What are their min(arr_delay) like?
+# select flights that are not cancelled
+not_cancelled<-filter(flights,!is.na(dep_time) & !is.na(arr_time))
+not_cancelled%>%
+  group_by(flight)%>%
+  summarise(
+    min_delay=min(arr_delay),
+    n=n()
+    )#%>%
+  # filter(is.na(min_delay))
+```
+
+A flight is 15 minutes early 50% of the time, and 15 minutes late 50% of the time.
+Maybe this means two different categories
+A flight is 15 minutes early 50% of the time
+```{r}
+# select flights that are not cancelled
+not_cancelled<-filter(flights,!is.na(dep_time) & !is.na(arr_time))
+not_cancelled%>%
+  group_by(flight)%>%
+  summarise(
+    median_delay=median(arr_delay,na.rm = TRUE),  # deal with missing values!!!
+    n=n()
+    )%>%   # mutate generate something for each row, summarise generate one value for all the data in one group
+  filter(median_delay<=-15) # these flights are 15min earlier for half of the chances
+```
+A flight is 15 minutes late 50% of the time
+```{r}
+# select flights that are not cancelled
+not_cancelled<-filter(flights,!is.na(dep_time) & !is.na(arr_time))
+not_cancelled%>%
+  group_by(flight)%>%
+  summarise(
+    median_delay=median(arr_delay,na.rm = TRUE),  # deal with missing values!!!
+    n=n()
+    )%>%   # mutate generate something for each row, summarise generate one value for all the data in one group
+  filter(median_delay>=15) # these flights are 15min late for half of the chances
+```
+A flight is always 10 minutes late.
+```{r}
+# select flights that are not cancelled
+not_cancelled<-filter(flights,!is.na(dep_time) & !is.na(arr_time))
+not_cancelled%>%
+  group_by(flight)%>%
+  summarise(
+    min_delay=min(arr_delay,na.rm = TRUE),  # deal with missing values!!!
+    n=n()
+    )%>%   # mutate generate something for each row, summarise generate one value for all the data in one group
+  filter(min_delay>=10)
+```
+
+A flight is 30 minutes early 50% of the time, and 30 minutes late 50% of the time.
+The same idea as above
+
+99% of the time a flight is on time. 1% of the time it’s 2 hours late.
+
+Which is more important: arrival delay or departure delay?
+
+
+
+
+Come up with another approach that will give you the same output as not_cancelled %>% count(dest) and not_cancelled %>% count(tailnum, wt = distance) (without using count()).
+
+```{r}
+# what does wt mean?
+?count()
+```
+
+```{r}
+# select flights that are not cancelled
+not_cancelled<-filter(flights,!is.na(dep_time) & !is.na(arr_time))
+not_cancelled%>%
+  group_by(dest)%>%
+  summarise(
+    n=n()
+    )
+```
+```{r}
+# select flights that are not cancelled
+not_cancelled<-filter(flights,!is.na(dep_time) & !is.na(arr_time))
+not_cancelled%>%
+  group_by(tailnum)%>%
+  summarise(
+    sum_dis=sum(distance)
+    )
+```
+
+
+Our definition of cancelled flights (is.na(dep_delay) | is.na(arr_delay) ) is slightly suboptimal. Why? Which is the most important column?
+dep_delay? As it never took off.
+
+Look at the number of cancelled flights per day. Is there a pattern? Is the proportion of cancelled flights related to the average delay?
+
+```{r}
+flights%>%
+  group_by(year,month,day)%>%
+  summarise(
+    n_cancel=sum(is.na(dep_delay)), # number of cancelled flights
+    n=n(),
+    average_dep_delay=mean(dep_delay,na.rm=TRUE),
+    average_arr_delay=mean(arr_delay,na.rm=TRUE)
+  )%>%
+  ggplot()+
+  geom_point(aes(x=n_cancel/n,y=average_dep_delay))
+```
+
+
+Which carrier has the worst delays? Challenge: can you disentangle the effects of bad airports vs. bad carriers? Why/why not? (Hint: think about flights %>% group_by(carrier, dest) %>% summarise(n()))
+```{r}
+not_cancelled<-filter(flights,!is.na(dep_time) & !is.na(arr_time))
+not_cancelled%>%
+  group_by(carrier)%>%
+  summarise(
+    ave_delay=mean(arr_delay,na.rm=TRUE)
+    )%>%
+  arrange(desc(ave_delay))
+```
+
+```{r}
+not_cancelled<-filter(flights,!is.na(dep_time) & !is.na(arr_time))
+not_cancelled%>%
+  ggplot()+
+  geom_boxplot(aes(x=carrier,y=arr_delay))
+```
+
+```{r}
+flights %>%
+  group_by(carrier, dest) %>% 
+  summarise(
+    n=n()
+    )
+```
+
+
+What does the sort argument to count() do. When might you use it?
+
+```{r}
+not_cancelled<-filter(flights,!is.na(dep_time) & !is.na(arr_time))
+not_cancelled%>%
+  group_by(flight)%>%
+  count(sort=TRUE)  # arrange data in the descending order
+```
+
+
+
+
+7.3.4 Exercises
+Explore the distribution of each of the x, y, and z variables in diamonds. What do you learn? Think about a diamond and how you might decide which dimension is the length, width, and depth.
+
+```{r}
+diamonds
+```
+
+```{r}
+ggplot(diamonds)+
+  geom_histogram(aes(x=x),binwidth = 0.01)
+```
+
+```{r}
+ggplot(diamonds)+
+  geom_histogram(aes(x=y),binwidth = 0.01)+
+  xlim(0,15)
+```
+```{r}
+ggplot(diamonds)+
+  geom_histogram(aes(x=z),binwidth = 0.01)+
+  xlim(0,10)
+```
+
+Explore the distribution of price. Do you discover anything unusual or surprising? (Hint: Carefully think about the binwidth and make sure you try a wide range of values.)
+
+```{r}
+ggplot(diamonds)+
+  geom_histogram(aes(x=price),binwidth = 10) # a range near 1500 is missing
+```
+```{r}
+diamonds%>%
+  filter(price<2000 , price>1000)%>%
+ggplot()+
+  geom_histogram(aes(x=price),binwidth = 10) # a range near 1500 is missing
+# There are no diamonds with a price of $1,500
+```
+
+How many diamonds are 0.99 carat? How many are 1 carat? What do you think is the cause of the difference?
+```{r}
+diamonds%>%
+  filter(carat==1)%>%  # 23 and 1558
+  count()
+```
+
+Compare and contrast coord_cartesian() vs xlim() or ylim() when zooming in on a histogram. What happens if you leave binwidth unset? What happens if you try and zoom so only half a bar shows?
+
+
+
+
+10.5 Exercises
+
+How can you tell if an object is a tibble? (Hint: try printing mtcars, which is a regular data frame).
+```{r}
+is_tibble(diamonds)
+is_tibble(flights)
+is_tibble(mtcars)
+```
+
+Compare and contrast the following operations on a data.frame and equivalent tibble. What is different? Why might the default data frame behaviours cause you frustration?
+```{r}
+df <- data.frame(abc = 1, xyz = "a")
+df$x
+df[, "xyz"]
+df[, c("abc", "xyz")]
+```
+If you have the name of a variable stored in an object, e.g. var <- "mpg", how can you extract the reference variable from a tibble?
+df[[var]]
+Practice referring to non-syntactic names in the following data frame by:
+
+Extracting the variable called 1.
+
+Plotting a scatterplot of 1 vs 2.
+
+Creating a new column called 3 which is 2 divided by 1.
+
+Renaming the columns to one, two and three.
+
+annoying <- tibble(
+  `1` = 1:10,
+  `2` = `1` * 2 + rnorm(length(`1`))
+)Copy
+What does tibble::enframe() do? When might you use it?
+
+What option controls how many additional column names are printed at the footer of a tibble?

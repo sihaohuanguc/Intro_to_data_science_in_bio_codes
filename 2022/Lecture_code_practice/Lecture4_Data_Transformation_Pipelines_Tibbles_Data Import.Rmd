@@ -1,0 +1,107 @@
+---
+title: "Lecture4"
+author: "Me"
+date: "2/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(nycflights13)
+library(tidyverse)
+```
+
+## table manipulation
+```{r}
+summarize(flights,delay=mean(dep_delay,na.rm=TRUE)) # have to remove na values before calculate mean as there are NA values in the column
+```
+
+
+```{r}
+by_day<-group_by(flights,year,month,day)#group table by several parameters
+summarize(by_day,delay=mean(dep_delay,na.rm=TRUE)) # now it shows the value by day
+```
+Use pipe!!
+It looks like summarise is used together with group_by and it describes some features of those "groups".
+After that, the original table is already gone, as you group the table by something and only those that are summarised remained.
+```{r}
+delays<-flights %>% 
+  group_by(dest)%>%   # when you do group_by and summarise, you will lose a lot of columns
+  summarise(
+    count=n(),
+    dist=mean(distance,na.rm=TRUE),
+    delay=mean(arr_delay,na.rm=TRUE),
+    day=first(day)
+  )%>%
+  filter(count>20,dest!="HNL")
+delays
+```
+
+```{r}
+not_canceled<-flights%>%filter(!is.na(dep_delay),!is.na(arr_delay)) # firest do some scfreening to select the flights that do fly
+p<-not_canceled %>% 
+  group_by(tailnum)%>%
+  summarise(
+    delay=mean(arr_delay),
+  )%>%
+  ggplot(mapping=aes(x=delay))+
+    geom_freqpoly(binwidth=10)
+p
+```
+
+```{r}
+not_canceled<-flights%>%filter(!is.na(dep_delay),!is.na(arr_delay))
+p<-not_canceled %>% 
+  group_by(tailnum)%>%
+  summarise(
+    delay=mean(arr_delay),
+    n=n()
+  )%>%
+  filter(n>25)%>%   # don't want the points with too low n
+  ggplot(mapping=aes(x=n,y=delay))+
+    geom_point(alpha=0.1)
+p
+```
+## chap 7.3,7.7
+```{r}
+ggplot(data=diamonds)+
+  geom_histogram(mapping=aes(x=carat),binwidth=0.5)
+```
+
+```{r}
+diamonds%>%
+  filter(carat<3)%>%
+  ggplot()+
+    geom_freqpoly(mapping=aes(x=carat,color=cut),binwidth=0.5)
+```
+## lecture 4b
+as.tibble(data.frame)
+```{r}
+tbl<-tribble(
+  ~x, ~y, ~z,
+  ###########
+  "a", 2, 3.6,
+  "b", 6, 4.7
+)
+tbl
+```
+
+```{r}
+challenge<-read_csv(readr_example("challenge.csv"))
+problems(challenge) # check what the problem is
+challenge
+```
+
+
+```{r}
+challenge<-read_csv(readr_example("challenge.csv"),
+                    col_types = cols(
+                      x = col_double(),
+                      y = col_date()
+                    ))         # lock down the type of variables
+problems(challenge) # check what the problem is
+challenge
+```
+
+
+
