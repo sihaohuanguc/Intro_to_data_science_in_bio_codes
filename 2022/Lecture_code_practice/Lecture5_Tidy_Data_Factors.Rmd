@@ -1,0 +1,180 @@
+---
+title: "Lecture5"
+author: "Me"
+date: "2/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# tidy form (chapter 12)
+1.Each variable is a column
+2.Each observation is a row
+3.Each value is in its own cell
+
+```{r}
+table1
+```
+
+```{r}
+table4a # make year a variable
+tidy4a<-table4a %>%
+  pivot_longer(c(`1999`,`2000`),names_to = "year", values_to = "cases")
+tidy4a
+```
+```{r}
+table4b  # still make "year" a variable, and make the table longer
+tidy4b<-table4b %>%
+  pivot_longer(c(`1999`,`2000`),names_to = "year", values_to = "population")
+tidy4b
+```
+```{r}
+# combine two tables
+tidy4<-left_join(tidy4a,tidy4b)  # 4a on the left, 4b on the right
+tidy4
+```
+```{r}
+# the data are paired so that you can draw figures
+ggplot(tidy4,aes(cases,population))+geom_point()
+```
+
+```{r}
+table2
+# split type into cases and population
+tidy2<-table2%>%
+  pivot_wider(names_from = type,values_from = count) # anmes_from provide the names of the variables
+tidy2
+
+```
+```{r}
+# when there are more than one data piece in a cell
+# separate by anything not alphabet or numeric
+table3
+table3%>%
+  separate(rate,into = c("cases","population"))
+```
+```{r}
+# when there are more than one data piece in a cell
+# separate by anything not alphabet or numeric
+table3
+table3%>%
+  separate(rate,into = c("cases","population"),sep="foo")
+# and you get nothing as the "sep" is not valid
+```
+
+```{r}
+nycflights13::flights%>%
+  select(year,month,day,dep_time)%>%
+  separate(dep_time,into = c("hour","minute"),sep=2)# separate at the second character
+# although it's not meaningful
+```
+```{r}
+nycflights13::flights%>%
+  select(year,month,day,dep_time)%>%
+  separate(dep_time,into = c("hour","minute"),sep=-2)# use minute number
+# now the separatio is correct
+```
+```{r}
+#combine two columns into a cell
+table5
+table5%>%
+  unite(new,century,year,sep="") # combine the two columns
+```
+# factors (chapter 15)
+```{r}
+x1<-c("Dec","Apr","Jan","Mar")
+x2<-c("Dec","Apr","Jam","Mar")  # there is a typo
+sort(x1) # sorted by alphabet, not the order of months
+```
+```{r}
+month_levels<-c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+y2<-parse_factor(x2,levels = month_levels)  # "Jam" is not in the list
+y2
+```
+```{r}
+gss_cat
+```
+```{r}
+relig_summary<-gss_cat%>%
+  group_by(relig)%>%
+  summarise(
+    age=mean(age,na.rm=TRUE),
+    tvhours=mean(tvhours,na.rm=TRUE),
+    n=n()
+  )
+relig_summary
+ggplot(relig_summary,aes(tvhours,relig))+geom_point()
+```
+```{r}
+ggplot(relig_summary,aes(tvhours,fct_reorder(relig,tvhours)))+geom_point() # the "relig" is reordered by the value of "tvhour"
+```
+```{r}
+relig_summary%>%
+  mutate(relig=fct_reorder(relig,tvhours))%>% # also the relig will bw in the order according to tvhours
+  ggplot(aes(tvhours,relig))+
+  geom_point()
+```
+
+```{r}
+rincome_summary<-gss_cat%>%
+  group_by(rincome)%>%
+  summarise(
+    age=mean(age,na.rm=TRUE),
+    tvhours=mean(tvhours,na.rm=TRUE),
+    n=n()
+  )
+rincome_summary
+ggplot(rincome_summary,aes(age,fct_relevel(rincome,"Not applicable")))+geom_point()
+# put not applicanle to the bottom
+```
+
+```{r}
+by_age<-gss_cat%>%
+  filter(!is.na(age))%>%
+  count(age,marital)%>%
+  group_by(age)%>%
+  mutate(prop=n/sum(n))
+by_age
+
+```
+```{r}
+ggplot(by_age,aes(age,prop,color=marital))+
+  geom_line(na.rm=TRUE)
+```
+```{r}
+ggplot(by_age,aes(age,prop,color=fct_reorder2(marital,age,prop)))+
+  geom_line(na.rm=TRUE)
+# now the order of the legend has changed so that groups with larger n will be above others
+```
+```{r}
+# use pipe to assign factors
+# fct_rev reverse the order
+gss_cat%>%
+  mutate(marital=marital%>%fct_infreq()%>%fct_rev())%>%
+  ggplot(aes(marital))+
+  geom_bar()
+```
+```{r}
+gss_cat%>% count(partyid)
+```
+```{r}
+gss_cat%>%
+  mutate(partyid=fct_recode(partyid,
+      "Republican,strong"="Strong republican"
+      ))%>%
+  count(partyid)
+```
+
+
+
+
+
+
+
+
+
+
+

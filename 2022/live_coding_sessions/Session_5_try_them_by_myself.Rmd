@@ -1,0 +1,242 @@
+---
+title: "Lecture5"
+author: "Me"
+date: "2/8/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# chapter 12
+# chapter 15
+
+12.2.1 Exercises
+Using prose, describe how the variables and observations are organised in each of the sample tables.
+
+Compute the rate for table2, and table4a + table4b. You will need to perform four operations:
+
+Extract the number of TB cases per country per year.
+Extract the matching population per country per year.
+Divide cases by population, and multiply by 10000.
+Store back in the appropriate place.
+Which representation is easiest to work with? Which is hardest? Why?
+```{r}
+table2
+```
+
+```{r}
+tidy2<-table2%>%
+  pivot_wider(names_from = type,values_from = count)
+tidy2%>%
+  mutate(rate=cases/population*10000)
+```
+```{r}
+tidy4a<-table4a %>%
+  pivot_longer(c(`1999`,`2000`),names_to = "year", values_to = "cases")
+tidy4b<-table4b %>%
+  pivot_longer(c(`1999`,`2000`),names_to = "year", values_to = "population")
+tidy4<-left_join(tidy4a,tidy4b)  # 4a on the left, 4b on the right
+tidy4%>%
+  mutate(rate=cases/population*10000)
+```
+
+```{r}
+left_join(table4a,table4b,by=c("country"))
+```
+
+
+
+Recreate the plot showing change in cases over time using table2 instead of table1. What do you need to do first?
+```{r}
+table2%>%
+  pivot_wider(names_from = type,values_from = count)%>%
+  ggplot()+
+  geom_line(aes(year,cases,group=country))+
+  geom_point(aes(year,cases,color=country))+
+  scale_x_continuous(breaks = (c(1999,2000)))
+```
+
+
+
+12.3.3 Exercises
+Why are pivot_longer() and pivot_wider() not perfectly symmetrical?
+Carefully consider the following example:
+(Hint: look at the variable types and think about column names.)
+```{r}
+stocks <- tibble(
+  year   = c(2015, 2015, 2016, 2016),
+  half  = c(   1,    2,     1,    2),
+  return = c(1.88, 0.59, 0.92, 0.17)
+)
+stocks
+stocks %>% 
+  pivot_wider(names_from = year, values_from = return) %>% 
+  pivot_longer(`2015`:`2016`, names_to = "year", values_to = "return")  # year and half column exchange their positions  # the names_to and values_to columns are moved to the end of the table
+```
+
+pivot_longer() has a names_ptypes argument, e.g.  names_ptypes = list(year = double()). What does it do?
+
+
+Why does this code fail?
+
+```{r}
+table4a %>% 
+  pivot_longer(c(1999, 2000), names_to = "year", values_to = "cases") # need backquotes, they are not numeric
+#> Error: Can't subset columns that don't exist.
+#> ✖ Locations 1999 and 2000 don't exist.
+#> ℹ There are only 3 columns
+```
+
+```{r}
+table4a %>% 
+  pivot_longer(c(`1999`, `2000`), names_to = "year", values_to = "cases")
+```
+```{r}
+table4a %>% 
+  pivot_longer(c(2,3), names_to = "year", values_to = "cases")  # if you want to use integer, that repesents the index (starting from 1)
+```
+
+
+What would happen if you widen this table? Why? How could you add a new column to uniquely identify each value?
+```{r}
+people <- tribble(
+  ~name,             ~names,  ~values,
+  #-----------------|--------|------
+  "Phillip Woods",   "age",       45,
+  "Phillip Woods",   "height",   186,
+  "Phillip Woods",   "age",       50,   # this column has the same identification info as the first column
+  "Jessica Cordero", "age",       37,
+  "Jessica Cordero", "height",   156
+)
+people$id <- c(1, 1, 2, 1, 1)
+people
+people%>%
+  pivot_wider(names_from = names, values_from = values)
+```
+Tidy the simple tibble below. Do you need to make it wider or longer? What are the variables?
+
+```{r}
+preg <- tribble(
+  ~pregnant, ~male, ~female,
+  "yes",     NA,    10,
+  "no",      20,    12
+)
+preg%>%
+  pivot_longer(c(male,female),names_to = "gender", values_to = "count")
+```
+
+
+
+12.4.3 Exercises
+What do the extra and fill arguments do in separate()? Experiment with the various options for the following two toy datasets.
+```{r}
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% 
+  separate(x, c("one", "two", "three"))
+
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% 
+  separate(x, c("one", "two", "three"),extra = "drop")
+
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% 
+  separate(x, c("one", "two", "three"),extra = "merge")
+
+tibble(x = c("a,b,c", "d,e", "f,g,i")) %>% 
+  separate(x, c("one", "two", "three"))
+
+tibble(x = c("a,b,c", "d,e", "f,g,i")) %>% 
+  separate(x, c("one", "two", "three"),fill="right")
+
+tibble(x = c("a,b,c", "d,e", "f,g,i")) %>% 
+  separate(x, c("one", "two", "three"),fill="left")
+```
+Both unite() and separate() have a remove argument. What does it do? Why would you set it to FALSE?
+
+```{r}
+table3
+table3 %>% 
+  separate(year, into = c("century", "year"), sep = 2, remove =FALSE) # the year column is still removed even if I set "FALSE"??????????
+```
+```{r}
+table5 %>% 
+  unite(new, century, year, sep = "", remove = FALSE)  # yes, the origin columns are retained
+```
+
+Compare and contrast separate() and extract(). Why are there three variations of separation (by position, by separator, and with groups), but only one unite?
+
+There are more than one ways to separate a column.
+
+12.5.1 Exercises
+Compare and contrast the fill arguments to pivot_wider() and complete().
+
+What does the direction argument to fill() do?
+
+decide which value will occupy the NA position. either "down" or "up"
+
+12.6.1 Exercises
+In this case study I set values_drop_na = TRUE just to make it easier to check that we had the correct values. Is this reasonable? Think about how missing values are represented in this dataset. Are there implicit missing values? What’s the difference between an NA and zero?
+
+What happens if you neglect the mutate() step? (mutate(names_from = stringr::str_replace(key, "newrel", "new_rel")))
+
+I claimed that iso2 and iso3 were redundant with country. Confirm this claim.
+
+For each country, year, and sex compute the total number of cases of TB. Make an informative visualisation of the data.
+
+
+
+15.3.1 Exercise
+Explore the distribution of rincome (reported income). What makes the default bar chart hard to understand? How could you improve the plot?
+
+```{r}
+gss_cat%>%
+  ggplot()+
+  geom_bar(aes(rincome))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+What is the most common relig in this survey? What’s the most common partyid?
+
+```{r}
+gss_cat%>%
+  group_by(relig)%>%
+  summarise(n=n())
+```
+```{r}
+gss_cat%>%
+  group_by(partyid)%>%
+  summarise(n=n())
+```
+
+
+Which relig does denom (denomination) apply to? How can you find out with a table? How can you find out with a visualisation?
+
+
+15.4.1 Exercises
+There are some suspiciously high numbers in tvhours. Is the mean a good summary?
+```{r}
+gss_cat %>%
+  filter(!is.na(tvhours)) %>%
+  ggplot(aes(x = tvhours)) +
+  geom_histogram(binwidth = 1)
+```
+
+For each factor in gss_cat identify whether the order of the levels is arbitrary or principled.
+
+Why did moving “Not applicable” to the front of the levels move it to the bottom of the plot?
+
+
+
+15.5.1 Exercises
+How have the proportions of people identifying as Democrat, Republican, and Independent changed over time?
+
+How could you collapse rincome into a small set of categories?
+
+
+
+
+
+
+
+
+
