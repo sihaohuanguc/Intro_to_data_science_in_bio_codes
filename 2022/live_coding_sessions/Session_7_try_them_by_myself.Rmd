@@ -1,0 +1,48 @@
+---
+title: "Session7"
+author: "Me"
+date: "2/17/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# R4DS chapter 23.2
+23.2.1 Exercises
+One downside of the linear model is that it is sensitive to unusual values because the distance incorporates a squared term. Fit a linear model to the simulated data below, and visualise the results. Rerun a few times to generate different simulated datasets. What do you notice about the model?
+```{r}
+sim1a <- tibble(
+  x = rep(1:10, each = 3),
+  y = x * 1.5 + 6 + rt(length(x), df = 2)
+)
+```
+One way to make linear models more robust is to use a different distance measure. For example, instead of root-mean-squared distance, you could use mean-absolute distance:
+```{r}
+measure_distance <- function(mod, data) {
+  diff <- data$y - model1(mod, data)
+  mean(abs(diff))
+}
+model1<-function(a,data){  # the calculated y
+  a[1]+data$x*a[2]
+}
+```
+Use optim() to fit this model to the simulated data above and compare it to the linear model.
+```{r}
+best<-optim(c(0,0),measure_distance,data=sim1a) # pick out the best one
+best$par
+p<-ggplot(sim1a,aes(x,y))+geom_point()
+p+geom_abline(intercept = best$par[1],slope = best$par[2])
+```
+
+One challenge with performing numerical optimisation is that it’s only guaranteed to find one local optimum. What’s the problem with optimising a three parameter model like this?
+
+model1 <- function(a, data) {
+  a[1] + data$x * a[2] + a[3]
+}
+
+PA: a[1] and a[3] are not independent. You'll never be able to find the optimized a[1] and a[3] separately. Instead, a[1]+a[3] could be optimized.
+
+
